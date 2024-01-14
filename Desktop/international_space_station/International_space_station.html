@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ISS Tracker</title>
+  
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+
+  <!-- Leaflet JavaScript -->
+  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+
+  <style>
+
+    .iss-icon {
+      background-image: url('iss-icon.png'); 
+      background-size: cover;
+      width: 20px;
+      height: 20px;
+    }
+
+    body, html {
+      height: 100%;
+      margin: 0;
+    }
+    
+    #map {
+      height: 100%;
+    }
+
+  </style>
+
+</head>
+
+<body>
+
+  <div id="map"></div>
+
+  <script>
+
+    // Load resized ISS icon
+    var issIcon = L.icon({
+      iconUrl: 'iss-icon.png',  
+      iconSize: [50, 50],
+      iconAnchor: [10, 10],
+      className: 'iss-icon' 
+    });
+
+    // Initialize map
+    var map = L.map('map').setView([0, 0], 2);
+
+    // Add OSM tile layer
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    // ISS marker
+    var issMarker;
+
+    // Get and update ISS position
+    function getISS() {
+
+      fetch("http://api.open-notify.org/iss-now.json")
+        .then(response => response.json())
+        .then(data => {
+
+          var { latitude, longitude } = data.iss_position;
+
+          if(!issMarker){
+            issMarker = L.marker([latitude, longitude], {icon: issIcon}).addTo(map);
+          } else {
+            issMarker.setLatLng([latitude, longitude]);
+          }
+      });
+
+    }
+    
+    // Get ISS position every 5 sec
+    setInterval(getISS, 5000);
+    
+    // Add fullscreen control
+    map.addControl(new L.Control.Fullscreen());
+
+    // Adjust map on fullscreen change
+    document.addEventListener('fullscreenchange', function() {
+      map.invalidateSize();
+    });
+
+  </script>
+
+</body>
+</html>
